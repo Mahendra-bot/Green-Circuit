@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenCircuit - E-Waste Rewards & Buyback Platform</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#16a34a',
+              dark: '#14532d',
+              light: '#f0fdf4',
+              hover: '#15803d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- CUSTOM STYLES & FONTS -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    .page-section {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    
+    .page-section.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .glass-header {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .eco-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .eco-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .google-font {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.2) !important;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #16a34a;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 min-h-screen flex flex-col justify-between antialiased transition-colors duration-300">
+
+  <!-- NAVIGATION BAR -->
+  <header class="border-b border-gray-100 dark:border-slate-800 sticky top-0 glass-header bg-white/85 dark:bg-slate-900/85 z-40 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <div onclick="navigateTo('home')" class="flex items-center gap-2 cursor-pointer group">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold text-xl group-hover:scale-105 transition-transform">
+          ♻️
+        </div>
+        <span class="text-xl font-bold text-emerald-950 dark:text-emerald-400 tracking-tight">GreenCircuit</span>
+      </div>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center gap-6">
+        <button onclick="navigateTo('home')" class="nav-btn font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-600 transition" data-page="home">Home</button>
+        <button onclick="navigateTo('how-it-works')" class="nav-btn text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition" data-page="how-it-works">How It Works</button>
+        <button onclick="navigateTo('sell')" class="nav-btn text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition" data-page="sell">Sell E-Waste</button>
+        <button onclick="navigateTo('rewards')" class="nav-btn text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition" data-page="rewards">🎁 Rewards</button>
+        <button onclick="navigateTo('pickup')" class="nav-btn text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition" data-page="pickup">🚚 Track Pickup</button>
+        <button onclick="navigateTo('about')" class="nav-btn text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition" data-page="about">About</button>
+      </nav>
+
+      <!-- Right Controls -->
+      <div class="hidden md:flex items-center gap-4">
+        <button onclick="toggleTheme()" class="p-2 rounded-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-yellow-400 hover:scale-105 transition" title="Toggle Theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+
+        <div id="logged-out-view" class="flex items-center gap-3">
+          <button onclick="openAuthModal('login')" class="text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-emerald-600 transition">Login</button>
+          <button onclick="openAuthModal('signup')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-5 py-2 rounded-full font-medium transition shadow-sm text-sm">
+            Get Started
+          </button>
+        </div>
+        
+        <div id="logged-in-view" class="hidden flex items-center gap-4">
+          <button onclick="navigateTo('dashboard')" class="text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-4 py-1.5 rounded-full hover:bg-emerald-100 transition">
+            👤 <span id="nav-user-name">User</span>
+          </button>
+          <button onclick="handleLogout()" class="text-xs text-red-500 font-medium hover:underline">Logout</button>
+        </div>
+      </div>
+
+      <!-- Mobile Right Section -->
+      <div class="flex items-center gap-2 md:hidden">
+        <button onclick="toggleTheme()" class="p-2 rounded-full border border-gray-200 dark:border-slate-700 text-sm">
+          <span id="theme-icon-mobile">🌙</span>
+        </button>
+        <button onclick="toggleMobileMenu()" class="text-2xl text-gray-700 dark:text-gray-200 p-1">☰</button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Drawer -->
+    <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 px-4 pt-2 pb-4 space-y-3">
+      <button onclick="navigateTo('home'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">Home</button>
+      <button onclick="navigateTo('how-it-works'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">How It Works</button>
+      <button onclick="navigateTo('sell'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">Sell E-Waste</button>
+      <button onclick="navigateTo('rewards'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">🎁 Rewards</button>
+      <button onclick="navigateTo('pickup'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">🚚 Track Pickup</button>
+      <button onclick="navigateTo('dashboard'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">Dashboard</button>
+      <button onclick="navigateTo('about'); toggleMobileMenu()" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300">About</button>
+      <div id="mobile-auth-btns" class="pt-2 border-t border-gray-100 dark:border-slate-800 flex gap-2">
+        <button onclick="openAuthModal('login'); toggleMobileMenu()" class="w-1/2 py-2 text-center text-sm font-semibold border dark:border-slate-700 rounded-lg">Login</button>
+        <button onclick="openAuthModal('signup'); toggleMobileMenu()" class="w-1/2 py-2 text-center text-sm font-semibold bg-emerald-600 text-white rounded-lg">Sign Up</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- AUTHENTICATION MODAL -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 relative shadow-2xl border border-emerald-100 dark:border-slate-700">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl font-bold">✕</button>
+      
+      <!-- Login Form -->
+      <div id="login-form-wrapper">
+        <h2 class="text-2xl font-bold text-emerald-950 dark:text-emerald-400 mb-1">Welcome Back</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Enter your credentials to access GreenCircuit.</p>
+
+        <!-- GOOGLE SIGN-IN BUTTON -->
+        <button onclick="openGooglePicker()" class="w-full flex items-center justify-center gap-3 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 py-3 rounded-xl transition font-medium text-sm mb-4">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Sign in with Google
+        </button>
+
+        <div class="flex items-center my-4">
+          <div class="flex-grow border-t border-gray-100 dark:border-slate-700"></div>
+          <span class="px-3 text-xs text-gray-400 uppercase font-semibold">Or continue with</span>
+          <div class="flex-grow border-t border-gray-100 dark:border-slate-700"></div>
+        </div>
+        
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">Email</label>
+            <input type="email" id="login-email" placeholder="name@example.com" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3 rounded-xl transition shadow-md">
+            Login
+          </button>
+        </form>
+        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+          Don't have an account? <button onclick="switchAuthMode('signup')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Sign Up</button>
+        </p>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="signup-form-wrapper" class="hidden">
+        <h2 class="text-2xl font-bold text-emerald-950 dark:text-emerald-400 mb-1">Create an Account</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">Join GreenCircuit to sell and recycle old electronics.</p>
+        
+        <!-- GOOGLE SIGN-UP BUTTON -->
+        <button onclick="openGooglePicker()" class="w-full flex items-center justify-center gap-3 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 py-3 rounded-xl transition font-medium text-sm mb-4">
+          <svg class="w-5 h-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          Sign up with Google
+        </button>
+
+        <div class="flex items-center my-4">
+          <div class="flex-grow border-t border-gray-100 dark:border-slate-700"></div>
+          <span class="px-3 text-xs text-gray-400 uppercase font-semibold">Or fill details</span>
+          <div class="flex-grow border-t border-gray-100 dark:border-slate-700"></div>
+        </div>
+
+        <form onsubmit="handleSignup(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">Full Name / Shop Name</label>
+            <input type="text" id="signup-name" placeholder="Rajesh Kumar" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">Email</label>
+            <input type="email" id="signup-email" placeholder="name@example.com" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">User Type</label>
+            <select id="signup-type" class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+              <option value="Individual">Individual</option>
+              <option value="Repair Shop">Repair Shop Partner</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase text-gray-600 dark:text-gray-300 mb-1">Password</label>
+            <input type="password" id="signup-password" placeholder="••••••••" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none transition">
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3 rounded-xl transition shadow-md">
+            Create Account
+          </button>
+        </form>
+        <p class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+          Already have an account? <button onclick="switchAuthMode('login')" class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline">Login</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTHENTIC GOOGLE ACCOUNT SELECTOR MODAL -->
+  <div id="google-picker-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm hidden items-center justify-center z-[60] px-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl google-font text-gray-800 border border-gray-100">
+      <button onclick="closeGooglePicker()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+      
+      <!-- Google Logo & Header -->
+      <div class="text-center mb-6">
+        <svg class="w-7 h-7 mx-auto mb-2" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <h3 class="text-xl font-medium text-gray-900">Choose an account</h3>
+        <p class="text-xs text-gray-500 mt-0.5">to continue to <span class="font-medium text-gray-800">GreenCircuit</span></p>
+      </div>
+
+      <!-- Google Accounts List -->
+      <div class="divide-y divide-gray-100 border-t border-b border-gray-100 my-2">
+        <button onclick="selectGoogleAccount('Narra Mahendra Reddy', 'narra.mahendra@gmail.com')" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
+          <div class="w-9 h-9 rounded-full bg-emerald-700 text-white font-medium flex items-center justify-center text-sm">N</div>
+          <div class="overflow-hidden">
+            <div class="font-medium text-sm text-gray-900 truncate">Narra Mahendra Reddy</div>
+            <div class="text-xs text-gray-500 truncate">narra.mahendra@gmail.com</div>
+          </div>
+        </button>
+
+        <button onclick="selectGoogleAccount('Narra Reddy', 'mahendra.reddy@gmail.com')" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
+          <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-medium flex items-center justify-center text-sm">M</div>
+          <div class="overflow-hidden">
+            <div class="font-medium text-sm text-gray-900 truncate">Narra Reddy</div>
+            <div class="text-xs text-gray-500 truncate">mahendra.reddy@gmail.com</div>
+          </div>
+        </button>
+
+        <button onclick="showCustomGoogleInput()" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
+          <div class="w-9 h-9 rounded-full border border-gray-200 text-gray-500 font-medium flex items-center justify-center text-base">+</div>
+          <div class="font-medium text-sm text-gray-700">Use another account</div>
+        </button>
+      </div>
+
+      <div id="custom-google-box" class="hidden text-left mt-4 pt-3 border-t border-gray-100">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Enter your Google Email</label>
+        <input type="email" id="custom-google-email" placeholder="yourname@gmail.com" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 mb-3">
+        <button onclick="submitCustomGoogleAccount()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">Next</button>
+      </div>
+
+      <div class="text-[11px] text-gray-400 mt-4 leading-normal">
+        To continue, Google will share your name, email address, and profile picture with GreenCircuit.
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-grow">
+
+    <!-- PAGE 1: HOME -->
+    <section id="page-home" class="page-section active">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="inline-block px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold rounded-full uppercase tracking-wider mb-4 animate-pulse">
+            🌱 Sustainable Technology Platform
+          </span>
+          <h1 class="text-4xl md:text-5xl font-extrabold text-emerald-950 dark:text-emerald-400 leading-tight mb-6">
+            Turn Your E-Waste Into Value
+          </h1>
+          <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-lg leading-relaxed">
+            Sell your old electronics, earn cash or rewards, and help keep e-waste out of the environment.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <button onclick="navigateTo('sell')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white px-8 py-3.5 rounded-full font-semibold transition text-center shadow-lg shadow-emerald-200 dark:shadow-none">
+              Sell E-Waste
+            </button>
+            <button onclick="navigateTo('how-it-works')" class="border border-gray-300 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 px-8 py-3.5 rounded-full font-semibold transition text-center">
+              Learn How It Works
+            </button>
+          </div>
+        </div>
+        <div class="flex justify-center">
+          <div class="w-full max-w-md bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-slate-800 dark:to-slate-800/80 rounded-3xl p-8 flex flex-col items-center justify-center text-center border border-emerald-100 dark:border-slate-700 shadow-sm min-h-[320px] eco-card">
+            <div class="text-7xl mb-4 animate-bounce">♻️</div>
+            <h3 class="text-xl font-bold text-emerald-900 dark:text-emerald-400 mb-2">Recycle. Reuse. Reward.</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300">Connecting individuals and repair shops with responsible refurbishers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Section -->
+      <div class="bg-gray-50/70 dark:bg-slate-800/50 py-16 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-2xl mx-auto mb-12">
+            <h2 class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mb-3">What Can You Sell?</h2>
+            <p class="text-gray-600 dark:text-gray-300">We accept a wide range of personal devices, components, and e-waste.</p>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">📱</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">Mobile Phones</h4>
+            </div>
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">💻</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">Laptops</h4>
+            </div>
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">📺</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">TVs</h4>
+            </div>
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">🔌</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">Chargers & Cables</h4>
+            </div>
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">🔋</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">Batteries</h4>
+            </div>
+            <div onclick="navigateTo('sell')" class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 text-center eco-card cursor-pointer">
+              <div class="text-4xl mb-3">⚙️</div>
+              <h4 class="font-semibold text-gray-800 dark:text-gray-200">Electronic Parts</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: HOW IT WORKS -->
+    <section id="page-how-it-works" class="page-section">
+      <div class="max-w-4xl mx-auto px-4 py-16">
+        <h1 class="text-4xl font-bold text-emerald-950 dark:text-emerald-400 text-center mb-4">How It Works</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-center mb-12">Recycling your electronics with GreenCircuit takes only 4 easy steps.</p>
+
+        <div class="space-y-6">
+          <div class="p-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl flex gap-6 items-start eco-card">
+            <span class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">01</span>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">List Your E-Waste</h3>
+              <p class="text-gray-600 dark:text-gray-400">Fill in simple details about your old electronic device, brand, and condition.</p>
+            </div>
+          </div>
+          <div class="p-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl flex gap-6 items-start eco-card">
+            <span class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">02</span>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">Get Estimated Value</h3>
+              <p class="text-gray-600 dark:text-gray-400">Instantly see the approximate buyback or reward value of your item.</p>
+            </div>
+          </div>
+          <div class="p-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl flex gap-6 items-start eco-card">
+            <span class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">03</span>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">Schedule Pickup</h3>
+              <p class="text-gray-600 dark:text-gray-400">Select a convenient date and location for our agent to pick up your device.</p>
+            </div>
+          </div>
+          <div class="p-6 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl flex gap-6 items-start eco-card">
+            <span class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">04</span>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-1">Get Paid & Recycle</h3>
+              <p class="text-gray-600 dark:text-gray-400">Receive payment or reward points after verification, and track recycling status.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: SELL E-WASTE FORM -->
+    <section id="page-sell" class="page-section">
+      <div class="max-w-2xl mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mb-2 text-center">Sell Your E-Waste</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-center mb-8">Fill out the simple form below to receive an instant buyback estimate.</p>
+
+        <!-- Success Alert -->
+        <div id="sell-success" class="hidden mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl text-emerald-800 dark:text-emerald-300 text-center shadow-sm">
+          <p class="font-bold text-lg">✓ Your request was submitted successfully!</p>
+          <p class="text-sm mt-1">GreenCircuit will contact you for verification and pickup.</p>
+          <button onclick="navigateTo('pickup')" class="mt-3 underline text-sm font-bold">Track Pickup Status &rarr;</button>
+        </div>
+
+        <form id="sell-form" onsubmit="handleSellSubmit(event)" class="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-xl space-y-6">
+          
+          <div>
+            <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2">1. Select Category</label>
+            <select id="form-category" onchange="calculateEstimate()" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+              <option value="Mobile Phone">Mobile Phone</option>
+              <option value="Laptop">Laptop</option>
+              <option value="TV">TV</option>
+              <option value="Tablet">Tablet</option>
+              <option value="Charger/Cable">Charger / Cable</option>
+              <option value="Battery">Battery</option>
+              <option value="Circuit Board">Circuit Board</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2">Brand</label>
+              <input type="text" id="form-brand" placeholder="e.g. Samsung" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2">Model</label>
+              <input type="text" id="form-model" placeholder="e.g. Galaxy A52" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2">Quantity</label>
+              <input type="number" id="form-quantity" min="1" value="1" onchange="calculateEstimate()" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+            <div>
+              <label class="block font-semibold text-gray-800 dark:text-gray-200 mb-2">Condition</label>
+              <select id="form-condition" onchange="calculateEstimate()" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+                <option value="Working">Working</option>
+                <option value="Damaged">Damaged</option>
+                <option value="Not Working">Not Working</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Estimated Value Card -->
+          <div class="bg-gradient-to-r from-emerald-50 to-emerald-100/60 dark:from-slate-900 dark:to-emerald-950/40 p-5 rounded-2xl text-center border border-emerald-200 dark:border-emerald-900">
+            <span class="text-xs uppercase text-emerald-800 dark:text-emerald-400 font-bold tracking-wider">Estimated Value</span>
+            <div id="estimated-value" class="text-4xl font-extrabold text-emerald-800 dark:text-emerald-400 my-1">₹2,400</div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Final value may change after verification.</p>
+          </div>
+
+          <!-- Pickup Details -->
+          <hr class="border-gray-100 dark:border-slate-700">
+          <h3 class="font-bold text-gray-900 dark:text-gray-100">Pickup Details</h3>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+              <input type="text" id="form-name" placeholder="Narra Mahendra Reddy" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+              <input type="tel" id="form-phone" placeholder="9876543210" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pickup Address</label>
+            <input type="text" id="form-address" placeholder="Flat No., Street Name" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+              <input type="text" id="form-city" placeholder="Vijayawada" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pincode</label>
+              <input type="text" id="form-pincode" placeholder="520001" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preferred Pickup Date</label>
+            <input type="date" id="form-date" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3.5 rounded-full transition shadow-md">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- PAGE 4: REWARDS CENTER -->
+    <section id="page-rewards" class="page-section">
+      <div class="max-w-4xl mx-auto px-4 py-12">
+        <div class="text-center mb-10">
+          <h1 class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mb-2">GreenCircuit Rewards Center</h1>
+          <p class="text-gray-600 dark:text-gray-300">Earn points for every device recycled and redeem them for partner vouchers.</p>
+        </div>
+
+        <div class="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white rounded-3xl p-8 mb-10 text-center shadow-lg">
+          <div class="text-xs uppercase tracking-wider font-bold text-emerald-200">Your Active Balance</div>
+          <div id="reward-pts-display" class="text-5xl font-extrabold my-2">1,250 Points</div>
+          <p class="text-sm text-emerald-100">Keep recycling to unlock bigger discounts and partner perks.</p>
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Available Vouchers</h2>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 eco-card flex flex-col justify-between">
+            <div>
+              <div class="text-3xl mb-3">🛍️</div>
+              <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg">₹100 E-Voucher</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Valid across Amazon & Flipkart partner stores.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">1,000 Points</span>
+              <button onclick="redeemVoucher(1000, '₹100 E-Voucher')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-full font-bold">Redeem</button>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 eco-card flex flex-col justify-between">
+            <div>
+              <div class="text-3xl mb-3">🎟️</div>
+              <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg">₹250 Cash Voucher</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Direct wallet cashback code on your next pickup.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">2,000 Points</span>
+              <button onclick="redeemVoucher(2000, '₹250 Cash Voucher')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-full font-bold">Redeem</button>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl p-6 eco-card flex flex-col justify-between">
+            <div>
+              <div class="text-3xl mb-3">🛠️</div>
+              <h3 class="font-bold text-gray-900 dark:text-gray-100 text-lg">Partner Repair Pass</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Free labor diagnosis at verified local repair shops.</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700 flex items-center justify-between">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm">1,500 Points</span>
+              <button onclick="redeemVoucher(1500, 'Partner Repair Pass')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-full font-bold">Redeem</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 5: LIVE PICKUP TRACKER -->
+    <section id="page-pickup" class="page-section">
+      <div class="max-w-3xl mx-auto px-4 py-12">
+        <h1 class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mb-2 text-center">Pickup Status Tracker</h1>
+        <p class="text-gray-600 dark:text-gray-300 text-center mb-8">Track your active scheduled e-waste collection requests in real-time.</p>
+
+        <div class="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div class="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-slate-700 mb-6">
+            <div>
+              <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-400">Active Request #GC-8921</span>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mt-1">Samsung Galaxy A52</h3>
+              <p class="text-xs text-gray-500">Scheduled Date: 15 Oct 2026 (10:00 AM – 12:00 PM)</p>
+            </div>
+            <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-full">Confirmed</span>
+          </div>
+
+          <div class="space-y-6">
+            <div class="flex items-center gap-4">
+              <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">✓</div>
+              <div>
+                <h4 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Request Submitted</h4>
+                <p class="text-xs text-gray-500">Your device buyback details were submitted successfully.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">✓</div>
+              <div>
+                <h4 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Device Verified</h4>
+                <p class="text-xs text-gray-500">Preliminary valuation accepted by logistics partner.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm animate-pulse">🚚</div>
+              <div>
+                <h4 class="font-bold text-amber-600 dark:text-amber-400 text-sm">Agent En Route</h4>
+                <p class="text-xs text-gray-500">Field partner assigned for doorstep collection on scheduled date.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 opacity-50">
+              <div class="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 text-gray-600 flex items-center justify-center font-bold text-sm">4</div>
+              <div>
+                <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm">Completed & Paid</h4>
+                <p class="text-xs text-gray-500">Hand over item and receive cash payout or reward points.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 6: DASHBOARD -->
+    <section id="page-dashboard" class="page-section">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Welcome back, <span id="dash-username">Guest</span>!</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400"><span id="dash-usertype" class="font-semibold text-emerald-700 dark:text-emerald-400">Individual</span> Account Dashboard</p>
+          </div>
+          <button onclick="navigateTo('sell')" class="bg-emerald-600 text-white px-5 py-2.5 rounded-full font-medium hover:bg-emerald-700 transition self-start shadow-sm">
+            + Sell E-Waste
+          </button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="grid sm:grid-cols-3 gap-6 mb-8">
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 eco-card">
+            <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Active Listings</span>
+            <div id="stat-active" class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mt-1">2</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 eco-card">
+            <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Earnings</span>
+            <div id="stat-earnings" class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹5,400</div>
+          </div>
+          <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-100 dark:border-slate-700 eco-card">
+            <span class="text-sm text-gray-500 dark:text-gray-400 font-medium">Reward Points</span>
+            <div id="stat-points" class="text-3xl font-bold text-emerald-950 dark:text-emerald-400 mt-1">1,250</div>
+          </div>
+        </div>
+
+        <!-- My Listings -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 p-6 mb-8 shadow-sm">
+          <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">My Recent Listings</h2>
+          <div id="listings-container" class="space-y-4">
+            <!-- Dynamic listings injected here -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 7: ABOUT -->
+    <section id="page-about" class="page-section">
+      <div class="max-w-4xl mx-auto px-4 py-16">
+        <h1 class="text-4xl font-bold text-emerald-950 dark:text-emerald-400 mb-6 text-center">About GreenCircuit</h1>
+        <p class="text-lg text-gray-600 dark:text-gray-300 text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+          GreenCircuit is an e-waste marketplace designed to make electronic waste collection, reuse and recycling easier. We connect individuals and local repair shops with buyers, refurbishers and recycling partners.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-50 dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 py-12 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="text-center md:text-left">
+        <div class="flex items-center justify-center md:justify-start gap-2">
+          <span class="text-xl">♻️</span>
+          <span class="text-lg font-bold text-emerald-950 dark:text-emerald-400">GreenCircuit</span>
+        </div>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">“Recycle. Reuse. Reward.”</p>
+      </div>
+      <div class="text-xs text-gray-400">
+        © 2026 GreenCircuit. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    let currentTheme = localStorage.getItem('gc_theme') || 'light';
+
+    function initTheme() {
+      if (currentTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.getElementById('theme-icon').innerText = '☀️';
+        document.getElementById('theme-icon-mobile').innerText = '☀️';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('theme-icon').innerText = '🌙';
+        document.getElementById('theme-icon-mobile').innerText = '🌙';
+      }
+    }
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('gc_theme', currentTheme);
+      initTheme();
+    }
+
+    let userPoints = parseInt(localStorage.getItem('gc_pts')) || 1250;
+    let currentUser = JSON.parse(localStorage.getItem('gc_user')) || null;
+
+    const defaultListings = [
+      { id: 1, name: 'Samsung Galaxy A52', category: 'Mobile Phone', price: 2400, status: 'Pending Verification' },
+      { id: 2, name: 'Dell Inspiron 15 Laptop', category: 'Laptop', price: 3000, status: 'Pickup Scheduled' }
+    ];
+
+    function getListings() {
+      const data = localStorage.getItem('gc_listings');
+      return data ? JSON.parse(data) : defaultListings;
+    }
+
+    function saveListings(listings) {
+      localStorage.setItem('gc_listings', JSON.stringify(listings));
+    }
+
+    // GOOGLE OAUTH MODAL
+    function openGooglePicker() {
+      document.getElementById('google-picker-modal').classList.remove('hidden');
+      document.getElementById('google-picker-modal').classList.add('flex');
+    }
+
+    function closeGooglePicker() {
+      document.getElementById('google-picker-modal').classList.add('hidden');
+      document.getElementById('google-picker-modal').classList.remove('flex');
+      document.getElementById('custom-google-box').classList.add('hidden');
+    }
+
+    function selectGoogleAccount(name, email) {
+      currentUser = { name: name, email: email, type: 'Individual' };
+      localStorage.setItem('gc_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeGooglePicker();
+      closeAuthModal();
+      navigateTo('dashboard');
+    }
+
+    function showCustomGoogleInput() {
+      document.getElementById('custom-google-box').classList.remove('hidden');
+    }
+
+    function submitCustomGoogleAccount() {
+      const email = document.getElementById('custom-google-email').value;
+      if (email) {
+        const name = email.split('@')[0];
+        const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+        selectGoogleAccount(formattedName, email);
+      }
+    }
+
+    function redeemVoucher(cost, title) {
+      if (userPoints >= cost) {
+        userPoints -= cost;
+        localStorage.setItem('gc_pts', userPoints);
+        document.getElementById('reward-pts-display').innerText = userPoints.toLocaleString('en-IN') + ' Points';
+        document.getElementById('stat-points').innerText = userPoints.toLocaleString('en-IN');
+        alert(`🎉 Success! You redeemed ${title}. Code sent to ${currentUser ? currentUser.email : 'your email'}.`);
+      } else {
+        alert(`⚠️ You need ${cost - userPoints} more points to redeem this voucher.`);
+      }
+    }
+
+    function openAuthModal(mode) {
+      document.getElementById('auth-modal').classList.remove('hidden');
+      document.getElementById('auth-modal').classList.add('flex');
+      switchAuthMode(mode);
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-modal').classList.remove('flex');
+    }
+
+    function switchAuthMode(mode) {
+      if (mode === 'login') {
+        document.getElementById('login-form-wrapper').classList.remove('hidden');
+        document.getElementById('signup-form-wrapper').classList.add('hidden');
+      } else {
+        document.getElementById('login-form-wrapper').classList.add('hidden');
+        document.getElementById('signup-form-wrapper').classList.remove('hidden');
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const name = email.split('@')[0];
+      currentUser = { name: name.charAt(0).toUpperCase() + name.slice(1), email: email, type: 'Individual' };
+      localStorage.setItem('gc_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      navigateTo('dashboard');
+    }
+
+    function handleSignup(e) {
+      e.preventDefault();
+      const name = document.getElementById('signup-name').value;
+      const email = document.getElementById('signup-email').value;
+      const type = document.getElementById('signup-type').value;
+      currentUser = { name: name, email: email, type: type };
+      localStorage.setItem('gc_user', JSON.stringify(currentUser));
+      updateAuthUI();
+      closeAuthModal();
+      navigateTo('dashboard');
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      localStorage.removeItem('gc_user');
+      updateAuthUI();
+      navigateTo('home');
+    }
+
+    function updateAuthUI() {
+      if (currentUser) {
+        document.getElementById('logged-out-view').classList.add('hidden');
+        document.getElementById('logged-in-view').classList.remove('hidden');
+        document.getElementById('nav-user-name').innerText = currentUser.name;
+        document.getElementById('dash-username').innerText = currentUser.name;
+        document.getElementById('dash-usertype').innerText = currentUser.type;
+        document.getElementById('form-name').value = currentUser.name;
+      } else {
+        document.getElementById('logged-out-view').classList.remove('hidden');
+        document.getElementById('logged-in-view').classList.add('hidden');
+        document.getElementById('dash-username').innerText = 'Guest';
+        document.getElementById('dash-usertype').innerText = 'Individual';
+      }
+    }
+
+    function navigateTo(pageId) {
+      document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+      const targetPage = document.getElementById('page-' + pageId);
+      if (targetPage) {
+        targetPage.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      if (pageId === 'dashboard') {
+        renderDashboard();
+      }
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    function calculateEstimate() {
+      const category = document.getElementById('form-category').value;
+      const condition = document.getElementById('form-condition').value;
+      const qty = parseInt(document.getElementById('form-quantity').value) || 1;
+
+      let basePrice = 500;
+      if (category === 'Mobile Phone') basePrice = 2500;
+      else if (category === 'Laptop') basePrice = 4500;
+      else if (category === 'TV') basePrice = 3000;
+      else if (category === 'Tablet') basePrice = 2000;
+      else if (category === 'Circuit Board') basePrice = 800;
+
+      let multiplier = 1.0;
+      if (condition === 'Damaged') multiplier = 0.5;
+      if (condition === 'Not Working') multiplier = 0.25;
+
+      const total = Math.round(basePrice * multiplier * qty);
+      document.getElementById('estimated-value').innerText = '₹' + total.toLocaleString('en-IN');
+      return total;
+    }
+
+    function handleSellSubmit(e) {
+      e.preventDefault();
+      const brand = document.getElementById('form-brand').value;
+      const model = document.getElementById('form-model').value;
+      const category = document.getElementById('form-category').value;
+      const estimatedValue = calculateEstimate();
+
+      const newListings = getListings();
+      newListings.unshift({
+        id: Date.now(),
+        name: `${brand} ${model}`,
+        category: category,
+        price: estimatedValue,
+        status: 'Pending Verification'
+      });
+
+      saveListings(newListings);
+      document.getElementById('sell-success').classList.remove('hidden');
+      document.getElementById('sell-form').reset();
+      calculateEstimate();
+    }
+
+    function renderDashboard() {
+      const listings = getListings();
+      const container = document.getElementById('listings-container');
+      
+      document.getElementById('stat-active').innerText = listings.length;
+      const totalSum = listings.reduce((acc, curr) => acc + curr.price, 0);
+      document.getElementById('stat-earnings').innerText = '₹' + totalSum.toLocaleString('en-IN');
+      document.getElementById('stat-points').innerText = userPoints.toLocaleString('en-IN');
+
+      if (listings.length === 0) {
+        container.innerHTML = `<p class="text-gray-500 text-sm">No active listings yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = listings.map(item => `
+        <div class="p-4 rounded-xl border border-gray-100 dark:border-slate-700 flex items-center justify-between eco-card">
+          <div>
+            <h4 class="font-bold text-gray-800 dark:text-gray-100">${item.name}</h4>
+            <p class="text-xs text-gray-500 dark:text-gray-400">${item.category} • Estimated Value: ₹${item.price}</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">${item.status}</span>
+            <button onclick="cancelListing(${item.id})" class="text-xs text-red-500 hover:underline">Cancel</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function cancelListing(id) {
+      const updated = getListings().filter(item => item.id !== id);
+      saveListings(updated);
+      renderDashboard();
+    }
+
+    window.onload = function() {
+      initTheme();
+      updateAuthUI();
+      const dateInput = document.getElementById('form-date');
+      if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+      }
+    };
+  </script>
+</body>
+</html>

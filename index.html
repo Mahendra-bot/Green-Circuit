@@ -7,6 +7,10 @@
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- OFFICIAL GOOGLE IDENTITY SERVICES SDK -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -248,7 +252,7 @@
     </div>
   </div>
 
-  <!-- AUTHENTIC GOOGLE ACCOUNT SELECTOR MODAL -->
+  <!-- GOOGLE ACCOUNT SELECTOR MODAL -->
   <div id="google-picker-modal" class="fixed inset-0 bg-black/65 backdrop-blur-sm hidden items-center justify-center z-[60] px-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl google-font text-gray-800 border border-gray-100">
       <button onclick="closeGooglePicker()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
@@ -265,37 +269,21 @@
         <p class="text-xs text-gray-500 mt-0.5">to continue to <span class="font-medium text-gray-800">GreenCircuit</span></p>
       </div>
 
-      <!-- Google Accounts List -->
-      <div class="divide-y divide-gray-100 border-t border-b border-gray-100 my-2">
-        <button onclick="selectGoogleAccount('Narra Mahendra Reddy', 'narra.mahendra@gmail.com')" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
-          <div class="w-9 h-9 rounded-full bg-emerald-700 text-white font-medium flex items-center justify-center text-sm">N</div>
-          <div class="overflow-hidden">
-            <div class="font-medium text-sm text-gray-900 truncate">Narra Mahendra Reddy</div>
-            <div class="text-xs text-gray-500 truncate">narra.mahendra@gmail.com</div>
-          </div>
-        </button>
-
-        <button onclick="selectGoogleAccount('Narra Reddy', 'mahendra.reddy@gmail.com')" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-medium flex items-center justify-center text-sm">M</div>
-          <div class="overflow-hidden">
-            <div class="font-medium text-sm text-gray-900 truncate">Narra Reddy</div>
-            <div class="text-xs text-gray-500 truncate">mahendra.reddy@gmail.com</div>
-          </div>
-        </button>
-
-        <button onclick="showCustomGoogleInput()" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
-          <div class="w-9 h-9 rounded-full border border-gray-200 text-gray-500 font-medium flex items-center justify-center text-base">+</div>
-          <div class="font-medium text-sm text-gray-700">Use another account</div>
-        </button>
+      <!-- Dynamically Rendered Accounts Container -->
+      <div id="google-accounts-list" class="divide-y divide-gray-100 border-t border-b border-gray-100 my-2 max-h-60 overflow-y-auto">
+        <!-- Accounts injected dynamically -->
       </div>
 
-      <div id="custom-google-box" class="hidden text-left mt-4 pt-3 border-t border-gray-100">
-        <label class="block text-xs font-medium text-gray-600 mb-1">Enter your Google Email</label>
-        <input type="email" id="custom-google-email" placeholder="yourname@gmail.com" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 mb-3">
-        <button onclick="submitCustomGoogleAccount()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">Next</button>
+      <!-- Add New Account Form -->
+      <div id="custom-google-box" class="text-left mt-4 pt-3 border-t border-gray-100">
+        <label class="block text-xs font-medium text-gray-600 mb-1">Type or select your Google Email</label>
+        <div class="flex gap-2 mb-2">
+          <input type="email" id="custom-google-email" placeholder="youremail@gmail.com" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500">
+          <button onclick="submitCustomGoogleAccount()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 rounded-lg text-sm transition">Sign In</button>
+        </div>
       </div>
 
-      <div class="text-[11px] text-gray-400 mt-4 leading-normal">
+      <div class="text-[11px] text-gray-400 mt-4 leading-normal text-center">
         To continue, Google will share your name, email address, and profile picture with GreenCircuit.
       </div>
     </div>
@@ -480,7 +468,7 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-              <input type="text" id="form-name" placeholder="Narra Mahendra Reddy" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
+              <input type="text" id="form-name" placeholder="Full Name" required class="w-full border border-gray-200 dark:border-slate-700 dark:bg-slate-900 rounded-xl p-3 outline-none">
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
@@ -713,6 +701,19 @@
     let userPoints = parseInt(localStorage.getItem('gc_pts')) || 1250;
     let currentUser = JSON.parse(localStorage.getItem('gc_user')) || null;
 
+    function getStoredUserAccounts() {
+      const saved = localStorage.getItem('gc_saved_google_accounts');
+      return saved ? JSON.parse(saved) : [];
+    }
+
+    function saveGoogleAccount(name, email) {
+      const accounts = getStoredUserAccounts();
+      if (!accounts.some(acc => acc.email === email)) {
+        accounts.push({ name, email });
+        localStorage.setItem('gc_saved_google_accounts', JSON.stringify(accounts));
+      }
+    }
+
     const defaultListings = [
       { id: 1, name: 'Samsung Galaxy A52', category: 'Mobile Phone', price: 2400, status: 'Pending Verification' },
       { id: 2, name: 'Dell Inspiron 15 Laptop', category: 'Laptop', price: 3000, status: 'Pickup Scheduled' }
@@ -727,8 +728,9 @@
       localStorage.setItem('gc_listings', JSON.stringify(listings));
     }
 
-    // GOOGLE OAUTH MODAL
+    // DYNAMIC GOOGLE PICKER MODAL POPULATION
     function openGooglePicker() {
+      renderGoogleAccountsList();
       document.getElementById('google-picker-modal').classList.remove('hidden');
       document.getElementById('google-picker-modal').classList.add('flex');
     }
@@ -736,10 +738,34 @@
     function closeGooglePicker() {
       document.getElementById('google-picker-modal').classList.add('hidden');
       document.getElementById('google-picker-modal').classList.remove('flex');
-      document.getElementById('custom-google-box').classList.add('hidden');
+    }
+
+    function renderGoogleAccountsList() {
+      const container = document.getElementById('google-accounts-list');
+      const accounts = getStoredUserAccounts();
+
+      let html = '';
+
+      if (accounts.length > 0) {
+        html += accounts.map(acc => {
+          const initial = acc.name ? acc.name.charAt(0).toUpperCase() : 'G';
+          return `
+            <button onclick="selectGoogleAccount('${acc.name}', '${acc.email}')" class="w-full flex items-center gap-3.5 py-3.5 px-2 hover:bg-gray-50 transition text-left">
+              <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-medium flex items-center justify-center text-sm">${initial}</div>
+              <div class="overflow-hidden">
+                <div class="font-medium text-sm text-gray-900 truncate">${acc.name}</div>
+                <div class="text-xs text-gray-500 truncate">${acc.email}</div>
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      container.innerHTML = html;
     }
 
     function selectGoogleAccount(name, email) {
+      saveGoogleAccount(name, email);
       currentUser = { name: name, email: email, type: 'Individual' };
       localStorage.setItem('gc_user', JSON.stringify(currentUser));
       updateAuthUI();
@@ -748,16 +774,14 @@
       navigateTo('dashboard');
     }
 
-    function showCustomGoogleInput() {
-      document.getElementById('custom-google-box').classList.remove('hidden');
-    }
-
     function submitCustomGoogleAccount() {
-      const email = document.getElementById('custom-google-email').value;
+      const email = document.getElementById('custom-google-email').value.trim();
       if (email) {
-        const name = email.split('@')[0];
-        const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+        const namePart = email.split('@')[0];
+        const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
         selectGoogleAccount(formattedName, email);
+      } else {
+        alert("Please enter a valid Google email address.");
       }
     }
 
